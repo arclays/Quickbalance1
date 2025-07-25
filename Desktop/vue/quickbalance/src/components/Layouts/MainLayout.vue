@@ -1,41 +1,10 @@
-<template>
-  <div class="main-layout" :class="{ 'dark-mode': themeStore.isDarkMode }">
-    <!-- Sidebar -->
-    <AppSidebar />
-
-    <!-- Main Content Area -->
-    <div
-      class="main-content"
-      :class="{ 'content-shifted': !navigationStore.sidebarCollapsed }"
-    >
-      <!-- Navbar -->
-      <AppNarbar />
-
-      <!-- Page Content -->
-      <main class="page-content">
-        <router-view />
-      </main>
-    </div>
-    <!-- footer -->
-    <AppFooter />
-    <!-- Global Loading Spinner -->
-    <div v-if="loading" class="loading-overlay">
-      <div class="loading-spinner">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-        <div class="loading-text mt-3">Loading...</div>
-      </div>
-    </div>
-  </div>
-</template>
 <script setup>
 import { computed, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useNavigationStore } from "@/stores/navigation";
 import { useThemeStore } from "../../stores/themeStore";
 import AppSidebar from "@/components/shared/AppSidebar.vue";
-import AppNarbar from "@/components/shared/AppNarbar.vue";
+import AppNavbar from "@/components/shared/AppNavbar.vue";
 import AppFooter from "@/components/AppFooter.vue";
 
 const authStore = useAuthStore();
@@ -54,45 +23,91 @@ onMounted(async () => {
 });
 </script>
 
+<template>
+  <div class="main-layout" :class="{ 'dark-mode': themeStore.isDarkMode }">
+    <!-- Sidebar -->
+    <AppSidebar />
+
+    <!-- Main Content -->
+    <div
+      class="main-content-wrapper"
+      :class="{ collapsed: navigationStore.sidebarCollapsed }"
+    >
+      <!-- Navbar -->
+      <AppNavbar :sidebar-collapsed="navigationStore.sidebarCollapsed" />
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Page Content -->
+        <main class="page-content">
+          <router-view />
+        </main>
+
+        <!-- Footer -->
+        <AppFooter />
+      </div>
+    </div>
+
+    <!-- Global Loading Spinner -->
+    <div v-if="loading" class="loading-overlay">
+      <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="loading-text mt-3">Loading...</div>
+      </div>
+    </div>
+  </div>
+</template>
+
 <style scoped>
 .main-layout {
+  display: flex;
   min-height: 100vh;
-  background: #f8f9fa;
-  transition: all 0.3s ease;
+  /* background: #1d7ad8; */
+  transition: background 0.3s ease;
+  position: relative;
+}
+
+.main-content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin-left: 210px;
+  transition: margin-left 0.3s ease;
+  width: calc(100% - 280px);
 }
 
 .main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-top: 60px;
+}
+.main-content-wrapper {
+  margin-left: 200px;
   transition: margin-left 0.3s ease;
-  min-height: 100vh;
 }
 
-.content-shifted {
-  margin-left: 280px;
+.main-content-wrapper.collapsed {
+  margin-left: 80px;
 }
 
 @media (max-width: 991.98px) {
-  .content-shifted {
+  .main-content-wrapper,
+  .main-content-wrapper.collapsed {
     margin-left: 0;
   }
 }
-
-.page-content {
-  padding-top: 80px;
-  padding-bottom: 2rem;
-  min-height: calc(100vh - 80px);
-}
-
 .loading-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: rgba(255, 255, 255, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 1050;
 }
 
 .loading-spinner {
@@ -104,8 +119,13 @@ onMounted(async () => {
   font-weight: 500;
 }
 
+/* Dark Mode */
 .dark-mode {
-  background: #1a1a1a;
-  color: #ffffff;
+  background: #121212;
+  color: #f1f1f1;
+}
+
+.dark-mode .loading-overlay {
+  background: rgba(0, 0, 0, 0.8);
 }
 </style>

@@ -1,13 +1,13 @@
 <template>
-  <div class="container-fluid">
+  <div class="container-fluid mt-2">
     <!-- Page Header -->
-    <div class="row mb-4 align-items-center">
+    <div class="row mb-0 align-items-center">
       <div class="col">
         <h1 class="h3 mb-0">Branch Dashboard</h1>
         <p class="text-muted">{{ currentBranch }} Branch - {{ currentDate }}</p>
       </div>
       <div class="col-auto">
-        <button class="btn btn-primary">
+        <button class="btn btn-dark">
           <!-- @click="refreshData -->
           <i class="fas fa-sync-alt me-2"></i>
           Refresh
@@ -34,10 +34,23 @@
       </div>
     </div>
 
-    <!-- Cash Status Section -->
-    <div class="row">
-      <div class="col-md-4 mb-4" v-for="i in 3" :key="i">
-        <CashStatus :cashData="cashStatus" />
+    <!-- Cash & Client Status Section -->
+    <div class="container">
+      <div class="row d-flex flex-wrap">
+        <!-- Cash Status 1 -->
+        <div class="col-md-4 mb-4">
+          <lientStatus :cashData="cashStatus" />
+        </div>
+
+        <!-- Client Status -->
+        <div class="col-md-4 mb-4">
+          <CashStatus :cashData="cashStatus" />
+        </div>
+
+        <!-- Cash Status 2 -->
+        <div class="col-md-4 mb-4">
+          <SavingStatus :cashData="cashStatus" />
+        </div>
       </div>
     </div>
 
@@ -74,8 +87,8 @@
                           getTransactionTypeClass(transaction.type),
                         ]"
                       >
-                        {{ transaction.type }}
-                      </span>
+                        {{ transaction.type }}</span
+                      >
                     </td>
                     <td>{{ transaction.clientName }}</td>
                     <td>{{ formatCurrency(transaction.amount) }}</td>
@@ -112,15 +125,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed } from "vue";
 // import { useStore } from "vuex";
 import CashStatus from "../../components/branch/BranchDashboard/CashStatus.vue";
 import { useAuthStore } from "../../stores/auth";
+import lientStatus from "@/components/branch/BranchDashboard/lientStatus.vue";
+import SavingStatus from "@/components/branch/BranchDashboard/SavingStatus.vue";
 
 const authStore = useAuthStore();
 
 // ✅ Access state or getters directly
-const currentUser = computed(() => authStore.user); // or `authStore.currentUser` if that's a getter
+const currentUser = computed(() => authStore.user);
 const currentBranch = computed(() => currentUser.value?.branch || "Main");
 const currentDate = computed(() => new Date().toLocaleDateString());
 
@@ -190,11 +205,12 @@ const recentTransactions = ref([
     status: "Pending",
   },
 ]);
-
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency: "UGX",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(amount);
 };
 
@@ -224,10 +240,10 @@ const getStatusClass = (status) => {
 };
 
 // const refreshData = () => {
-//   store.dispatch("setLoading", true);
+//   stores.dispatch("setLoading", true);
 //   setTimeout(() => {
-//     store.dispatch("setLoading", false);
-//     store.dispatch("showNotification", {
+//     stores.dispatch("setLoading", false);
+//     stores.dispatch("showNotification", {
 //       type: "success",
 //       message: "Dashboard data refreshed successfully",
 //     });
@@ -246,3 +262,12 @@ const printReceipt = (transaction) => {
 //   refreshData();
 // });
 </script>
+<style scoped>
+.cash-card {
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+</style>

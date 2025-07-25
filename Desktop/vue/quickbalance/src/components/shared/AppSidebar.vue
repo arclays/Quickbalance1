@@ -1,3 +1,41 @@
+<script setup>
+import { ref, onMounted, watch } from "vue";
+import { useRoute } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+import { useNavigationStore } from "@/stores/navigation";
+
+const route = useRoute();
+const authStore = useAuthStore();
+const navigationStore = useNavigationStore();
+
+const loanActionsExpanded = ref(false);
+const bankingExpanded = ref(false);
+
+const toggleSubmenu = (menu) => {
+  if (menu === "LoanActions") {
+    loanActionsExpanded.value = !loanActionsExpanded.value;
+  }
+  if (menu === "Banking") {
+    bankingExpanded.value = !bankingExpanded.value;
+  }
+};
+function handleMenuClick() {
+  loanActionsExpanded.value = false;
+}
+
+watch(
+  () => route.path,
+  (newPath) => {
+    loanActionsExpanded.value = newPath.startsWith("/loan-actions");
+    bankingExpanded.value = newPath.startsWith("/banking");
+  },
+  { immediate: true }
+);
+onMounted(() => {
+  navigationStore.initializeSidebar();
+});
+</script>
+
 <template>
   <div class="sidebar-wrapper">
     <nav
@@ -10,35 +48,17 @@
       <!-- Sidebar Header -->
       <div class="sidebar-header">
         <router-link to="/" class="sidebar-brand">
-          <!-- <i class="fas fa-cube brand-icon"></i> -->
           <span class="brand-text" v-show="!navigationStore.sidebarCollapsed"
             >Quickbalance</span
           >
         </router-link>
+
         <button
           class="btn btn-link sidebar-toggle d-lg-none"
           @click="navigationStore.closeMobileSidebar"
         >
           <i class="fas fa-times"></i>
         </button>
-      </div>
-
-      <!-- User Profile Section -->
-      <div class="sidebar-profile" v-show="!navigationStore.sidebarCollapsed">
-        <div class="profile-avatar">
-          <img
-            :src="authStore.userAvatar"
-            :alt="authStore.userName"
-            class="avatar-img"
-          />
-          <div class="status-indicator status-online"></div>
-        </div>
-        <div class="profile-info">
-          <h6 class="profile-name">{{ authStore.userName }}</h6>
-          <small class="profile-role">{{
-            formatRole(authStore.userRole)
-          }}</small>
-        </div>
       </div>
 
       <!-- Sidebar Content -->
@@ -52,11 +72,12 @@
               >Dashboard</span
             >
           </li>
+
           <li class="nav-item">
             <router-link
-              to="/dashboard"
+              to="/"
               class="nav-link"
-              :class="{ active: $route.name === 'Dashboard' }"
+              :class="{ active: $route.name === 'BrachDashboard' }"
               @click="handleMenuClick"
             >
               <i class="nav-icon fas fa-tachometer-alt"></i>
@@ -67,17 +88,17 @@
           </li>
           <li class="nav-item">
             <router-link
-              to="/analytics"
+              to="/AddClients"
               class="nav-link"
-              :class="{ active: $route.name === 'Analytics' }"
+              :class="{ active: $route.name === 'AddClients' }"
               @click="handleMenuClick"
             >
-              <i class="nav-icon fas fa-chart-line"></i>
+              <i class="nav-icon fas fa-users"></i>
               <span class="nav-text" v-show="!navigationStore.sidebarCollapsed"
-                >Analytics</span
+                >Clients</span
               >
               <span class="nav-badge" v-show="!navigationStore.sidebarCollapsed"
-                >New</span
+                >Add New</span
               >
             </router-link>
           </li>
@@ -93,6 +114,7 @@
               >Management</span
             >
           </li>
+
           <li class="nav-item" v-if="authStore.hasRole(['admin', 'manager'])">
             <router-link
               to="/users"
@@ -103,60 +125,152 @@
               }"
               @click="handleMenuClick"
             >
-              <i class="nav-icon fas fa-users"></i>
+              <i class="nav-icon fas fa-user-cog"></i>
               <span class="nav-text" v-show="!navigationStore.sidebarCollapsed"
                 >Users</span
               >
+
               <span
                 class="nav-count"
                 v-show="!navigationStore.sidebarCollapsed"
-                >{{ userCount }}</span
+                >{{ authStore.user }}</span
               >
             </router-link>
           </li>
-
-          <!-- Projects Submenu -->
+          <!-- Loan Actions Submenu -->
           <li
             class="nav-item"
-            :class="{ 'nav-item-expanded': projectsExpanded }"
+            :class="{ 'nav-item-expanded': loanActionsExpanded }"
           >
             <a
               href="#"
               class="nav-link nav-link-submenu"
-              :class="{ active: $route.path.startsWith('/projects') }"
-              @click.prevent="toggleSubmenu('projects')"
+              :class="{ active: route.path.startsWith('/loan-actions') }"
+              @click.prevent="toggleSubmenu('loanActions')"
             >
-              <i class="nav-icon fas fa-project-diagram"></i>
+              <i class="nav-icon fas fa-money-check-alt"></i>
+              <span class="nav-text" v-show="!navigationStore.sidebarCollapsed">
+                Loan Actions
+              </span>
+              <i
+                class="nav-arrow fas"
+                :class="
+                  loanActionsExpanded ? 'fa-chevron-down' : 'fa-chevron-right'
+                "
+                v-show="!navigationStore.sidebarCollapsed"
+              ></i>
+            </a>
+
+            <ul
+              class="nav-submenu"
+              v-show="loanActionsExpanded && !navigationStore.sidebarCollapsed"
+            >
+              <li>
+                <router-link
+                  to="/loan-actions/applicants"
+                  class="nav-link"
+                  :class="{ active: route.name === 'LoanApplicants' }"
+                  @click="handleMenuClick"
+                >
+                  <span class="nav-text">Loan Applicants</span>
+                </router-link>
+              </li>
+
+              <li>
+                <router-link
+                  to="/loan-actions/create"
+                  class="nav-link"
+                  :class="{ active: route.name === 'CreateLoan' }"
+                  @click="handleMenuClick"
+                >
+                  <span class="nav-text">Enter Loan</span>
+                </router-link>
+              </li>
+            </ul>
+          </li>
+
+          <!-- savings -->
+          <li class="nav-item">
+            <router-link
+              to="/Savings"
+              class="nav-link"
+              :class="{ active: $route.name === 'Savings' }"
+              @click="handleMenuClick"
+            >
+              <i class="nav-icon fas fa-clipboard-check"></i>
               <span class="nav-text" v-show="!navigationStore.sidebarCollapsed"
-                >Projects</span
+                >Savings</span
+              >
+            </router-link>
+          </li>
+
+          <!-- Banking Submenu -->
+          <li
+            class="nav-item"
+            :class="{ 'nav-item-expanded': bankingExpanded }"
+          >
+            <a
+              href="#"
+              class="nav-link nav-link-submenu"
+              :class="{ active: $route.path.startsWith('/banking') }"
+              @click.prevent="toggleSubmenu('banking')"
+            >
+              <i class="nav-icon fas fa-university"></i>
+
+              <span class="nav-text" v-show="!navigationStore.sidebarCollapsed"
+                >Banking</span
               >
               <i
                 class="nav-arrow fas fa-chevron-right"
                 v-show="!navigationStore.sidebarCollapsed"
               ></i>
             </a>
+
             <ul
               class="nav-submenu"
-              v-show="projectsExpanded && !navigationStore.sidebarCollapsed"
+              v-show="bankingExpanded && !navigationStore.sidebarCollapsed"
             >
               <li>
                 <router-link
-                  to="/projects"
+                  to="/banking/deposit"
                   class="nav-link"
-                  :class="{ active: $route.name === 'Projects' }"
+                  :class="{ active: $route.name === 'Deposit' }"
                   @click="handleMenuClick"
                 >
-                  <span class="nav-text">All Projects</span>
+                  <span class="nav-text">Deposit</span>
                 </router-link>
               </li>
+
               <li>
                 <router-link
-                  to="/projects/create"
+                  to="/banking/withdraw"
                   class="nav-link"
-                  :class="{ active: $route.name === 'CreateProject' }"
+                  :class="{ active: $route.name === 'Withdraw' }"
                   @click="handleMenuClick"
                 >
-                  <span class="nav-text">Create Project</span>
+                  <span class="nav-text">Withdraw</span>
+                </router-link>
+              </li>
+
+              <li>
+                <router-link
+                  to="/banking/receivables"
+                  class="nav-link"
+                  :class="{ active: $route.name === 'Receivables' }"
+                  @click="handleMenuClick"
+                >
+                  <span class="nav-text">Receivables</span>
+                </router-link>
+              </li>
+
+              <li>
+                <router-link
+                  to="/banking/payables"
+                  class="nav-link"
+                  :class="{ active: $route.name === 'Payables' }"
+                  @click="handleMenuClick"
+                >
+                  <span class="nav-text">Payables</span>
                 </router-link>
               </li>
             </ul>
@@ -181,41 +295,94 @@
             <span
               class="nav-section-title"
               v-show="!navigationStore.sidebarCollapsed"
-              >Tools</span
+              >Business Utilities</span
             >
           </li>
+
           <li class="nav-item">
             <router-link
-              to="/calendar"
+              to="/debtors"
               class="nav-link"
-              :class="{ active: $route.name === 'Calendar' }"
+              :class="{ active: $route.name === 'Debtors' }"
               @click="handleMenuClick"
             >
-              <i class="nav-icon fas fa-calendar"></i>
+              <i class="nav-icon fas fa-file-invoice-dollar"></i>
               <span class="nav-text" v-show="!navigationStore.sidebarCollapsed"
-                >Calendar</span
+                >Debtors</span
               >
             </router-link>
           </li>
+
           <li class="nav-item">
             <router-link
-              to="/messages"
+              to="/expenses"
               class="nav-link"
-              :class="{ active: $route.name === 'Messages' }"
+              :class="{ active: $route.name === 'Expenses' }"
               @click="handleMenuClick"
             >
-              <i class="nav-icon fas fa-envelope"></i>
+              <i class="nav-icon fas fa-money-bill-wave"></i>
               <span class="nav-text" v-show="!navigationStore.sidebarCollapsed"
-                >Messages</span
+                >Expenses</span
               >
-              <span
-                class="nav-badge badge-danger"
-                v-show="!navigationStore.sidebarCollapsed && unreadMessages > 0"
-              >
-                {{ unreadMessages }}
-              </span>
             </router-link>
           </li>
+
+          <li class="nav-item">
+            <router-link
+              to="/branches"
+              class="nav-link"
+              :class="{ active: $route.name === 'Branches' }"
+              @click="handleMenuClick"
+            >
+              <i class="nav-icon fas fa-code-branch"></i>
+              <span class="nav-text" v-show="!navigationStore.sidebarCollapsed"
+                >Branches</span
+              >
+            </router-link>
+          </li>
+
+          <li class="nav-item">
+            <router-link
+              to="/Audit"
+              class="nav-link"
+              :class="{ active: $route.name === 'Audit' }"
+              @click="handleMenuClick"
+            >
+              <i class="nav-icon fas fa-piggy-bank"></i>
+              <span class="nav-text" v-show="!navigationStore.sidebarCollapsed"
+                >Audit</span
+              >
+            </router-link>
+          </li>
+
+          <li class="nav-item">
+            <router-link
+              to="/statements"
+              class="nav-link"
+              :class="{ active: $route.name === 'Statements' }"
+              @click="handleMenuClick"
+            >
+              <i class="nav-icon fas fa-file-alt"></i>
+              <span class="nav-text" v-show="!navigationStore.sidebarCollapsed"
+                >Statements</span
+              >
+            </router-link>
+          </li>
+
+          <li class="nav-item">
+            <router-link
+              to="/transactions"
+              class="nav-link"
+              :class="{ active: $route.name === 'Transactions' }"
+              @click="handleMenuClick"
+            >
+              <i class="nav-icon fas fa-exchange-alt"></i>
+              <span class="nav-text" v-show="!navigationStore.sidebarCollapsed"
+                >Transactions</span
+              >
+            </router-link>
+          </li>
+
           <li class="nav-item">
             <router-link
               to="/settings"
@@ -234,19 +401,6 @@
 
       <!-- Sidebar Footer -->
       <div class="sidebar-footer">
-        <div class="sidebar-stats" v-show="!navigationStore.sidebarCollapsed">
-          <div class="stat-item">
-            <small class="text-muted">Storage Used</small>
-            <div class="progress progress-sm mt-1">
-              <div
-                class="progress-bar bg-primary"
-                :style="{ width: storageUsed + '%' }"
-              ></div>
-            </div>
-            <small class="text-muted">{{ storageUsed }}% of 10 GB</small>
-          </div>
-        </div>
-
         <button
           class="btn btn-link sidebar-collapse-btn"
           @click="navigationStore.toggleSidebar"
@@ -277,70 +431,14 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, watch } from "vue";
-import { useRoute } from "vue-router";
-import { useAuthStore } from "../../stores/auth";
-import { useNavigationStore } from "../../stores/navigation";
-
-const route = useRoute();
-const authStore = useAuthStore();
-const navigationStore = useNavigationStore();
-
-// Reactive data
-const projectsExpanded = ref(false);
-const userCount = ref(1247);
-const unreadMessages = ref(5);
-const storageUsed = ref(65);
-
-// Methods
-const toggleSubmenu = (menu) => {
-  if (menu === "projects") {
-    projectsExpanded.value = !projectsExpanded.value;
-  }
-};
-
-const handleMenuClick = () => {
-  // Close mobile sidebar when menu item is clicked
-  if (window.innerWidth < 992) {
-    navigationStore.closeMobileSidebar();
-  }
-};
-
-const formatRole = (role) => {
-  const roleMap = {
-    admin: "Administrator",
-    manager: "Manager",
-    user: "User",
-  };
-  return roleMap[role] || role;
-};
-
-// Watch route changes to expand appropriate submenus
-watch(
-  route,
-  (newRoute) => {
-    if (newRoute.path.startsWith("/projects")) {
-      projectsExpanded.value = true;
-    }
-  },
-  { immediate: true }
-);
-
-onMounted(() => {
-  navigationStore.initializeSidebar();
-});
-</script>
-
 <style scoped>
-/* Same styles as before, but with router-link specific styles */
 .sidebar {
   position: fixed;
   top: 0;
   left: 0;
   height: 100vh;
   width: 200px;
-  background: linear-gradient(135deg, #162dff 0%, #162dff 100%);
+  background: rgb(43, 42, 42);
   color: white;
   transition: all 0.3s ease;
   z-index: 1000;
@@ -349,21 +447,17 @@ onMounted(() => {
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   transform: translateX(-100%);
 }
-
 .sidebar-collapsed {
   width: 70px;
 }
-
 .sidebar-mobile-open {
   transform: translateX(0);
 }
-
 @media (min-width: 992px) {
   .sidebar {
     transform: translateX(0);
   }
 }
-
 .sidebar-header {
   padding: 1.5rem 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -372,7 +466,6 @@ onMounted(() => {
   justify-content: space-between;
   min-height: 80px;
 }
-
 .sidebar-brand {
   display: flex;
   align-items: center;
@@ -382,20 +475,16 @@ onMounted(() => {
   text-decoration: none;
   transition: color 0.3s ease;
 }
-
 .sidebar-brand:hover {
   color: rgba(255, 255, 255, 0.8);
 }
-
 .brand-icon {
   margin-right: 0.75rem;
   font-size: 1.75rem;
 }
-
 .brand-text {
   transition: opacity 0.3s ease;
 }
-
 .sidebar-toggle {
   color: white;
   border: none;
@@ -599,10 +688,10 @@ onMounted(() => {
 .sidebar-collapse-btn {
   width: 100%;
   color: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(193, 197, 243, 0.342);
   background: rgba(255, 255, 255, 0.1);
-  padding: 0.75rem;
-  border-radius: 8px;
+  padding: 0.1rem;
+  border-radius: 10px;
   transition: all 0.3s ease;
 }
 

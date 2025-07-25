@@ -146,18 +146,15 @@
 
 <script setup>
 import { useAuthStore } from "@/stores/auth";
-// import { useGlobalStore } from "@/stores/global";
 import { computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
 const authStore = useAuthStore();
-// const globalStore = useGlobalStore();
 const router = useRouter();
 
 const isAuthenticated = computed(() => authStore.isAuthenticated);
 const currentUser = computed(() => authStore.user);
 const userRole = computed(() => authStore.userRole);
-// const loading = computed(() => globalStore.loading);
 
 const logout = async () => {
   await authStore.logout();

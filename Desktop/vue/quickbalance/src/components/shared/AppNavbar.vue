@@ -1,40 +1,17 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+  <nav
+    class="navbar navbar-expand-lg navbar-light bg-white shadow-sm"
+    :class="{ shifted: !sidebarCollapsed }"
+  >
     <div class="container-fluid">
       <!-- Mobile Menu Toggle -->
       <button
         class="btn btn-link navbar-toggler d-lg-none me-3"
         @click="navigationStore.toggleMobileSidebar"
+        aria-label="Toggle navigation"
       >
         <i class="fas fa-bars"></i>
       </button>
-
-      <!-- Breadcrumb Navigation -->
-      <nav aria-label="breadcrumb" class="d-none d-md-block">
-        <ol class="breadcrumb mb-0">
-          <li class="breadcrumb-item">
-            <router-link to="/" class="text-decoration-none">
-              <i class="fas fa-home me-1"></i>
-              Home
-            </router-link>
-          </li>
-          <li
-            v-for="(crumb, index) in breadcrumbs"
-            :key="index"
-            class="breadcrumb-item"
-            :class="{ active: index === breadcrumbs.length - 1 }"
-          >
-            <router-link
-              v-if="crumb.to && index !== breadcrumbs.length - 1"
-              :to="crumb.to"
-              class="text-decoration-none"
-            >
-              {{ crumb.text }}
-            </router-link>
-            <span v-else>{{ crumb.text }}</span>
-          </li>
-        </ol>
-      </nav>
 
       <!-- Right Side Navigation -->
       <div class="navbar-nav ms-auto d-flex flex-row align-items-center">
@@ -50,25 +27,26 @@
                 @keyup.enter="performSearch"
                 @focus="showSearchResults = true"
                 @blur="hideSearchResults"
+                aria-label="Search"
               />
-              <button class="btn btn-outline-secondary" @click="performSearch">
+              <button
+                class="btn btn-outline-secondary"
+                @click="performSearch"
+                aria-label="Search"
+              >
                 <i class="fas fa-search"></i>
               </button>
             </div>
-
-            <!-- Search Results Dropdown -->
             <div
-              v-if="showSearchResults && searchResults.length > 0"
+              v-if="showSearchResults && searchResults.length"
               class="search-results"
             >
-              <div class="search-results-header">
-                <small class="text-muted">Recent searches</small>
-              </div>
+              <div class="search-results-header">Search Results</div>
               <div
-                v-for="result in searchResults"
-                :key="result.id"
+                v-for="(result, index) in searchResults"
+                :key="index"
                 class="search-result-item"
-                @click="selectSearchResult(result)"
+                @mousedown="selectSearchResult(result)"
               >
                 <div class="search-result-icon">
                   <i :class="result.icon"></i>
@@ -90,17 +68,12 @@
             class="btn btn-link nav-link dropdown-toggle position-relative"
             data-bs-toggle="dropdown"
             aria-expanded="false"
+            aria-label="Quick actions"
           >
             <i class="fas fa-plus-circle fa-lg"></i>
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
             <li class="dropdown-header">Quick Actions</li>
-            <li>
-              <router-link class="dropdown-item" to="/projects/create">
-                <i class="fas fa-project-diagram me-2"></i>
-                New Project
-              </router-link>
-            </li>
             <li v-if="authStore.hasRole(['admin', 'manager'])">
               <a
                 class="dropdown-item"
@@ -130,70 +103,6 @@
             </li>
           </ul>
         </div>
-
-        <!-- Notifications -->
-        <div class="nav-item dropdown me-3">
-          <button
-            class="btn btn-link nav-link position-relative"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
-            <i class="fas fa-bell fa-lg"></i>
-            <!-- <span
-              v-if="notificationStore.unreadCount > 0"
-              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-            >
-              {{
-                notificationStore.unreadCount > 99
-                  ? "99+"
-                  : notificationStore.unreadCount
-              }}
-            </span> -->
-          </button>
-          <div class="dropdown-menu dropdown-menu-end notification-dropdown">
-            <div
-              class="dropdown-header d-flex justify-content-between align-items-center"
-            >
-              <span>Notifications</span>
-              <button class="btn btn-sm btn-link p-0">Mark all as read</button>
-              <!-- @click="notificationStore.markAllAsRead -->
-            </div>
-            <!-- <div class="notification-list">
-              <div
-                v-for="notification in notificationStore.notifications"
-                :key="notification.id"
-                class="notification-item"
-                :class="{ 'notification-unread': !notification.read }"
-                @click="notificationStore.markAsRead(notification.id)"
-              >
-                <div
-                  class="notification-icon"
-                  :class="getNotificationIconClass(notification.type)"
-                >
-                  <i :class="getNotificationIcon(notification.type)"></i>
-                </div>
-                <div class="notification-content">
-                  <div class="notification-title">{{ notification.title }}</div>
-                  <div class="notification-message">
-                    {{ notification.message }}
-                  </div>
-                  <div class="notification-time">
-                    {{ formatNotificationTime(notification.timestamp) }}
-                  </div>
-                </div>
-              </div>
-            </div> -->
-            <div class="dropdown-footer">
-              <router-link
-                to="/notifications"
-                class="btn btn-sm btn-primary w-100"
-              >
-                View All Notifications
-              </router-link>
-            </div>
-          </div>
-        </div>
-
         <!-- Theme Toggle -->
         <div class="nav-item me-3">
           <button
@@ -204,6 +113,7 @@
                 ? 'Switch to Light Mode'
                 : 'Switch to Dark Mode'
             "
+            aria-label="Toggle theme"
           >
             <i
               class="fas"
@@ -218,11 +128,14 @@
             class="btn btn-link nav-link dropdown-toggle d-flex align-items-center"
             data-bs-toggle="dropdown"
             aria-expanded="false"
+            aria-label="User menu"
           >
             <img
               :src="authStore.userAvatar"
               :alt="authStore.userName"
               class="user-avatar me-2"
+              width="40"
+              height="40"
             />
             <div class="user-info d-none d-md-block text-start">
               <div class="user-name">{{ authStore.userName }}</div>
@@ -236,14 +149,12 @@
                   :src="authStore.userAvatar"
                   :alt="authStore.userName"
                   class="profile-avatar"
+                  width="48"
+                  height="48"
                 />
                 <div class="profile-info">
                   <div class="profile-name">{{ authStore.userName }}</div>
                   <div class="profile-email">{{ authStore.userEmail }}</div>
-                  <div class="profile-status">
-                    <span class="status-dot status-online"></span>
-                    Online
-                  </div>
                 </div>
               </div>
             </li>
@@ -291,57 +202,53 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-// import { useThemeStore } from "../stores/themestore";
 import { useAuthStore } from "../../stores/auth";
 import { useNavigationStore } from "../../stores/navigation";
-// import { useNotificationStore } from "../../stores/notification";
 import { useThemeStore } from "../../stores/themeStore";
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 const navigationStore = useNavigationStore();
-// const notificationStore = useNotificationStore();
 const themeStore = useThemeStore();
 
-// onMounted(() => {
-//   notificationStore.fetchNotifications();
-// });
-
-// Reactive data
 const searchQuery = ref("");
 const showSearchResults = ref(false);
-
-// Computed
-const breadcrumbs = computed(() => route.meta.breadcrumb || []);
-
-// Search results (would typically come from API)
-const searchResults = ref([
-  {
-    id: 1,
-    title: "Project Alpha",
-    subtitle: "Active project",
-    icon: "fas fa-project-diagram text-primary",
-    route: "/projects/1",
-  },
-  {
-    id: 2,
-    title: "User Management",
-    subtitle: "System settings",
-    icon: "fas fa-users text-success",
-    route: "/users",
-  },
-]);
+const searchResults = ref([]);
+const sidebarCollapsed = ref(false);
 
 // Methods
 const performSearch = async () => {
-  if (!searchQuery.value.trim()) return;
+  if (!searchQuery.value.trim()) {
+    searchResults.value = [];
+    return;
+  }
 
-  // Here you would typically call an API
-  console.log("Searching for:", searchQuery.value);
-  showSearchResults.value = true;
+  try {
+    // Here you would typically call an API
+    console.log("Searching for:", searchQuery.value);
+    // Mock search results for demonstration
+    searchResults.value = [
+      {
+        title: "User Profile",
+        subtitle: "View user details",
+        icon: "fas fa-user",
+        route: "/profile",
+      },
+      {
+        title: "Settings",
+        subtitle: "Account configuration",
+        icon: "fas fa-cog",
+        route: "/settings",
+      },
+    ];
+    showSearchResults.value = true;
+  } catch (error) {
+    console.error("Search failed:", error);
+    searchResults.value = [];
+  }
 };
 
 const hideSearchResults = () => {
@@ -357,15 +264,15 @@ const selectSearchResult = (result) => {
     router.push(result.route);
   }
 };
+
 const quickAction = (action) => {
   switch (action) {
     case "new-user":
-      // Open user creation modal or navigate to user creation page
-      console.log("Creating new user...");
+      router.push("/users/new");
       break;
     case "import":
-      // Open import dialog
       console.log("Opening import dialog...");
+      // Implement import functionality
       break;
   }
 };
@@ -383,96 +290,71 @@ const formatRole = (role) => {
   return roleMap[role] || role;
 };
 
-// const getNotificationIcon = (type) => {
-//   const iconMap = {
-//     success: "fas fa-check-circle",
-//     warning: "fas fa-exclamation-triangle",
-//     info: "fas fa-info-circle",
-//     error: "fas fa-exclamation-circle",
-//   };
-//   return iconMap[type] || "fas fa-bell";
-// };
-
-// const getNotificationIconClass = (type) => {
-//   const classMap = {
-//     success: "notification-icon-success",
-//     warning: "notification-icon-warning",
-//     info: "notification-icon-info",
-//     error: "notification-icon-error",
-//   };
-//   return classMap[type] || "notification-icon-default";
-// };
-
-// const formatNotificationTime = (timestamp) => {
-//   const now = new Date();
-//   const diff = now - new Date(timestamp);
-//   const minutes = Math.floor(diff / 60000);
-//   const hours = Math.floor(diff / 3600000);
-
-//   if (minutes < 1) return "Just now";
-//   if (minutes < 60) return `${minutes}m ago`;
-//   if (hours < 24) return `${hours}h ago`;
-//   return new Date(timestamp).toLocaleDateString();
-// };
+const formatTime = (time) => {
+  return time;
+};
 
 const openHelp = () => {
-  // Open help modal or navigate to help page
-  console.log("Opening help...");
+  router.push("/help");
 };
 
 const logout = async () => {
   if (confirm("Are you sure you want to sign out?")) {
-    await authStore.logout();
-    router.push("/auth/Userlogin");
+    try {
+      await authStore.logout();
+      router.push("/auth/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   }
 };
 
-// onMounted(() => {
-//   // Initialize notifications
-//   notificationStore.fetchNotifications();
-// });
+// Keyboard navigation for search results
+const handleKeyDown = (e) => {
+  if (e.key === "Escape") {
+    showSearchResults.value = false;
+  }
+};
+
+onUnmounted(() => {
+  document.removeEventListener("keydown", handleKeyDown);
+});
 </script>
 
 <style scoped>
-/* Same styles as before with router-link specific styles */
 .navbar {
-  transition: all 0.3s ease;
-  border-bottom: 1px solid #e9ecef;
-  z-index: 999;
   position: fixed;
   top: 0;
-  left: 0;
+  left: 280px;
   right: 0;
+  height: 60px;
+  z-index: 1030;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.navbar.shifted {
+  left: 200px;
+}
+
+.navbar:not(.shifted) {
+  left: 80px;
+}
+
+@media (max-width: 991.98px) {
+  .navbar {
+    left: 0 !important;
+  }
 }
 
 .navbar-toggler {
   border: none;
-  color: #6c757d;
+  color: var(--bs-gray-600);
   font-size: 1.2rem;
 }
 
-.breadcrumb {
-  background: none;
-  padding: 0;
-  margin: 0;
-}
-
-.breadcrumb-item + .breadcrumb-item::before {
-  content: "›";
-  color: #6c757d;
-}
-
-.breadcrumb-item a {
-  color: #007bff;
-  transition: color 0.3s ease;
-}
-
-.breadcrumb-item a:hover {
-  color: #0056b3;
-}
-
 .nav-link {
-  color: #6c757d !important;
+  color: var(--bs-gray-600) !important;
   border: none;
   background: none;
   padding: 0.5rem;
@@ -480,15 +362,16 @@ const logout = async () => {
 }
 
 .nav-link:hover {
-  color: #007bff !important;
+  color: var(--bs-primary) !important;
 }
 
 .dropdown-item {
   transition: all 0.3s ease;
+  padding: 0.5rem 1rem;
 }
 
 .dropdown-item:hover {
-  background-color: #f8f9fa;
+  background-color: var(--bs-light);
   transform: translateX(2px);
 }
 
@@ -496,7 +379,8 @@ const logout = async () => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 2px solid #e9ecef;
+  border: 2px solid var(--bs-border-color);
+  object-fit: cover;
 }
 
 .user-info {
@@ -506,22 +390,23 @@ const logout = async () => {
 .user-name {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #495057;
+  color: var(--bs-gray-800);
 }
 
 .user-role {
   font-size: 0.75rem;
-  color: #6c757d;
+  color: var(--bs-gray-600);
 }
 
 .user-dropdown {
   min-width: 280px;
+  padding: 0.5rem 0;
 }
 
 .user-profile-header {
   display: flex;
   align-items: center;
-  padding: 0.5rem 0;
+  padding: 0.75rem 1rem;
 }
 
 .profile-avatar {
@@ -529,40 +414,30 @@ const logout = async () => {
   height: 48px;
   border-radius: 50%;
   margin-right: 0.75rem;
+  object-fit: cover;
 }
 
 .profile-info {
   flex: 1;
+  overflow: hidden;
 }
 
 .profile-name {
   font-weight: 600;
-  color: #495057;
+  color: var(--bs-gray-800);
   margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .profile-email {
   font-size: 0.875rem;
-  color: #6c757d;
+  color: var(--bs-gray-600);
   margin-bottom: 0.25rem;
-}
-
-.profile-status {
-  font-size: 0.75rem;
-  color: #28a745;
-  display: flex;
-  align-items: center;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 0.5rem;
-}
-
-.status-online {
-  background-color: #28a745;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .search-container {
@@ -572,13 +447,14 @@ const logout = async () => {
 .search-input {
   width: 300px;
   border-radius: 20px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--bs-border-color);
   transition: all 0.3s ease;
+  padding: 0.375rem 1rem;
 }
 
 .search-input:focus {
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+  border-color: var(--bs-primary);
   width: 350px;
 }
 
@@ -588,10 +464,10 @@ const logout = async () => {
   left: 0;
   right: 0;
   background: white;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--bs-border-color);
   border-radius: 0.5rem;
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-  z-index: 1000;
+  z-index: 1050;
   max-height: 300px;
   overflow-y: auto;
   margin-top: 0.25rem;
@@ -599,7 +475,9 @@ const logout = async () => {
 
 .search-results-header {
   padding: 0.5rem 1rem;
-  border-bottom: 1px solid #f8f9fa;
+  border-bottom: 1px solid var(--bs-border-color);
+  font-weight: 600;
+  background-color: var(--bs-light);
 }
 
 .search-result-item {
@@ -607,12 +485,12 @@ const logout = async () => {
   align-items: center;
   padding: 0.75rem 1rem;
   cursor: pointer;
-  border-bottom: 1px solid #f8f9fa;
+  border-bottom: 1px solid var(--bs-border-color);
   transition: background-color 0.2s ease;
 }
 
 .search-result-item:hover {
-  background: #f8f9fa;
+  background: var(--bs-light);
 }
 
 .search-result-item:last-child {
@@ -625,34 +503,45 @@ const logout = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8f9fa;
+  background: var(--bs-light);
   border-radius: 50%;
   margin-right: 0.75rem;
+  color: var(--bs-primary);
 }
 
 .search-result-content {
   flex: 1;
+  min-width: 0;
 }
 
 .search-result-title {
   font-weight: 600;
-  color: #495057;
+  color: var(--bs-gray-800);
   margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .search-result-subtitle {
   font-size: 0.875rem;
-  color: #6c757d;
+  color: var(--bs-gray-600);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .notification-dropdown {
   min-width: 380px;
   max-height: 500px;
+  display: flex;
+  flex-direction: column;
 }
 
 .notification-list {
   max-height: 350px;
   overflow-y: auto;
+  flex: 1;
 }
 
 .notification-item {
@@ -660,12 +549,12 @@ const logout = async () => {
   align-items: flex-start;
   padding: 1rem;
   cursor: pointer;
-  border-bottom: 1px solid #f8f9fa;
+  border-bottom: 1px solid var(--bs-border-color);
   transition: background-color 0.2s ease;
 }
 
 .notification-item:hover {
-  background: #f8f9fa;
+  background: var(--bs-light);
 }
 
 .notification-item:last-child {
@@ -673,8 +562,8 @@ const logout = async () => {
 }
 
 .notification-unread {
-  background: #f0f8ff;
-  border-left: 4px solid #007bff;
+  background: rgba(var(--bs-primary-rgb), 0.05);
+  border-left: 4px solid var(--bs-primary);
 }
 
 .notification-icon {
@@ -689,24 +578,24 @@ const logout = async () => {
 }
 
 .notification-icon-success {
-  background: #d4edda;
-  color: #155724;
+  background: var(--bs-success-bg-subtle);
+  color: var(--bs-success-text);
 }
 .notification-icon-warning {
-  background: #fff3cd;
-  color: #856404;
+  background: var(--bs-warning-bg-subtle);
+  color: var(--bs-warning-text);
 }
 .notification-icon-info {
-  background: #d1ecf1;
-  color: #0c5460;
+  background: var(--bs-info-bg-subtle);
+  color: var(--bs-info-text);
 }
 .notification-icon-error {
-  background: #f8d7da;
-  color: #721c24;
+  background: var(--bs-danger-bg-subtle);
+  color: var(--bs-danger-text);
 }
 .notification-icon-default {
-  background: #f8f9fa;
-  color: #6c757d;
+  background: var(--bs-light);
+  color: var(--bs-gray-600);
 }
 
 .notification-content {
@@ -716,26 +605,30 @@ const logout = async () => {
 
 .notification-title {
   font-weight: 600;
-  color: #495057;
+  color: var(--bs-gray-800);
   margin-bottom: 0.25rem;
   font-size: 0.9rem;
 }
 
 .notification-message {
-  color: #6c757d;
+  color: var(--bs-gray-600);
   font-size: 0.85rem;
   margin-bottom: 0.25rem;
   line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .notification-time {
-  color: #adb5bd;
+  color: var(--bs-gray-500);
   font-size: 0.75rem;
 }
 
 .dropdown-footer {
   padding: 0.75rem;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid var(--bs-border-color);
 }
 
 @media (max-width: 768px) {
@@ -749,6 +642,11 @@ const logout = async () => {
 
   .user-info {
     display: none !important;
+  }
+
+  .notification-dropdown {
+    min-width: 300px;
+    width: 300px;
   }
 }
 </style>

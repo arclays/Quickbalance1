@@ -5,7 +5,6 @@
         <div class="auth-overlay"></div>
         <div class="auth-pattern"></div>
       </div>
-
       <div class="auth-content">
         <div class="container">
           <div class="row justify-content-center align-items-center min-vh-100">

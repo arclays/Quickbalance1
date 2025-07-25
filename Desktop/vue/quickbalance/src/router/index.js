@@ -3,7 +3,8 @@ import { createRouter, createWebHistory } from "vue-router";
 // Layouts
 import MainLayout from "@/components/Layouts/MainLayout.vue";
 import AuthLayout from "@/components//Layouts/AuthLayout.vue";
-
+// src/router/index.js or wherever your router is defined
+import AddClients from "@/views/branch/AddClients.vue";
 // Views
 import Login from "../views/auth/UserLogin.vue";
 import Register from "../views/auth/UserRegister.vue";
@@ -57,6 +58,12 @@ const routes = [
           breadcrumb: [{ text: "Home", to: "/" }, { text: "BranchDashboard" }],
         },
       },
+
+      {
+        path: "/AddClients",
+        name: "AddClients",
+        component: AddClients,
+      },
     ],
   },
 
@@ -80,7 +87,9 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const { useAuthStore } = await import("../stores/auth");
   const authStore = useAuthStore();
-  document.title = to.meta.title ? `${to.meta.title} - MyApp` : "MyApp";
+  document.title = to.meta.title
+    ? `${to.meta.title} - Quickbalance`
+    : "Quickbalance";
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return next("/auth/Userlogin");

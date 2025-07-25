@@ -9,6 +9,10 @@ export const useNavigationStore = defineStore("navigation", () => {
   const breadcrumbs = ref([]);
   const pageTitle = ref("Dashboard");
 
+  // 👇 Add submenu expanded states
+  const submenus = ref({
+    loanActions: false,
+  });
   // Getters
   const isMobile = computed(() => {
     if (typeof window !== "undefined") {
@@ -16,7 +20,6 @@ export const useNavigationStore = defineStore("navigation", () => {
     }
     return false;
   });
-
   // Actions
   const toggleSidebar = () => {
     sidebarCollapsed.value = !sidebarCollapsed.value;
@@ -57,6 +60,17 @@ export const useNavigationStore = defineStore("navigation", () => {
     }
   };
 
+  // 👇 Submenu toggle
+  const toggleSubmenu = (menuKey) => {
+    submenus.value[menuKey] = !submenus.value[menuKey];
+  };
+
+  const closeAllSubmenus = () => {
+    for (const key in submenus.value) {
+      submenus.value[key] = false;
+    }
+  };
+
   return {
     // State
     sidebarCollapsed,
@@ -64,6 +78,7 @@ export const useNavigationStore = defineStore("navigation", () => {
     activeMenu,
     breadcrumbs,
     pageTitle,
+    submenus,
 
     // Getters
     isMobile,
@@ -76,5 +91,7 @@ export const useNavigationStore = defineStore("navigation", () => {
     setBreadcrumbs,
     setPageTitle,
     initializeSidebar,
+    toggleSubmenu,
+    closeAllSubmenus,
   };
 });
